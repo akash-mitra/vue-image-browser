@@ -1,0 +1,46 @@
+{
+  "name": "@akashmitra/vue-image-browser",
+  "version": "1.0.0",
+  "description": "A VueJS Image Browser Component with options to upload, browse, delete and select images",
+  "main": "/dist/vue-image-browser.umd.js",
+  "module": "dist/vue-image-browser.esm.js",
+  "unpkg": "dist/vue-image-browser.min.js",
+  "browser": {
+    "./sfc": "src/vue-image-browser.vue"
+  },
+  "scripts": {
+    "build": "npm run build:umd & npm run build:es & npm run build:unpkg",
+    "build:umd": "rollup --config build/rollup.config.js --format umd --file dist/vue-image-browser.umd.js",
+    "build:es": "rollup --config build/rollup.config.js --format es --file dist/vue-image-browser.esm.js",
+    "build:unpkg": "rollup --config build/rollup.config.js --format iife --file dist/vue-image-browser.min.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akash-mitra/vue-image-browser.git"
+  },
+  "keywords": [
+    "vue",
+    "image",
+    "browser",
+    "gallery"
+  ],
+  "author": "Akash Mitra",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/akash-mitra/vue-image-browser/issues"
+  },
+  "homepage": "https://github.com/akash-mitra/vue-image-browser#readme",
+  "devDependencies": {
+    "@rollup/plugin-buble": "^0.21.3",
+    "@rollup/plugin-commonjs": "^12.0.0",
+    "autoprefixer": "^9.8.0",
+    "core-js": "^3.6.5",
+    "postcss": "^7.0.30",
+    "postcss-import": "^12.0.1",
+    "rollup": "^2.10.9",
+    "rollup-plugin-vue": "^5.1.9",
+    "tailwindcss": "^1.4.6",
+    "vue": "^2.6.11",
+    "vue-template-compiler": "^2.6.11"
+  }
+}
