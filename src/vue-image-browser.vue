@@ -150,6 +150,9 @@
 
 <script>
 export default {
+
+        name: 'vue-image-browser',
+
         props: {
             source: {
                 type: String,
