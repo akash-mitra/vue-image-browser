@@ -159,6 +159,16 @@ export default {
                 default: '/api/photos'
             },
 
+            save_url: {
+                type: String,
+                default: '/api/photos'
+            },
+
+            request_headers: {
+                type: Object,
+                default: {}
+            },
+
             deletable: {
                     type: Boolean,
                     default: false
@@ -266,8 +276,15 @@ export default {
                                 }
                                 // ajax.upload.addEventListener('abort', abortHandler, false);
 
-                                upf.ajax.open('POST', '/api/media')
-                                upf.ajax.setRequestHeader("X-CSRF-Token", document.head.querySelector('meta[name="csrf-token"]').content)
+                                upf.ajax.open('POST', p.save_url)
+
+                                let header_keys = Object.keys(p.request_headers)
+                                for (let i=0; i < header_keys.length; i++) {
+                                        let header = header_keys[i]
+                                        let val = p.request_headers[header]
+                                        upf.ajax.setRequestHeader(header, val)
+                                }
+
                                 upf.ajax.onreadystatechange = function () {
                                     if (upf.ajax.readyState === 4 && upf.ajax.status === 200) {
                                         let response = upf.ajax.responseText
@@ -293,7 +310,7 @@ export default {
                 // Gets media data from the server. If a query string is
                 // provided then only returns the data that fulfill
                 // the search conditions in query string.
-                getFromServer: function (query, callback) {
+                getFromServer1: function (query, callback) {
                         const p = this
                         let url = this.source + ((typeof query != 'undefined' && query != null) ? '?query=' + encodeURIComponent(query):'')
                         axios.get(url)
@@ -311,31 +328,31 @@ export default {
                         })
                 },
 
+                getFromServer(query) {
+                        const p = this
+                        let url = this.source + ((typeof query != 'undefined' && query != null) ? '?query=' + encodeURIComponent(query):'')
+
+                        let xhr = new XMLHttpRequest()
+                        xhr.open('GET', url)
+                        xhr.responseType = 'json'
+                        xhr.send()
+
+                        xhr.onload = function() {
+                                let responseObj = xhr.response;
+                                p.photos = response.data
+                                p.message = null
+                                p.searchResult = response.data.total + ' image(s)'
+                        }
+
+                        xhr.onerror = function() {
+                                p.message = 'Failed to load images from the server. Please reload the page.'
+                        };
+                },
+
 
                 deleteSelected() {
 
-                    // let q = this
-
                     this.$emit('deleted', this.selectedPhoto)
-
-                    // util.confirm("Delete photo?",  "This will permanently delete this media. This action is unrecoverable.", function (){
-
-                    //             let p = q
-                    //             axios.delete('/api/media/' + q.selectedPhoto.id)
-                    //             .then(function(response) {
-                    //                     util.notifySuccess('Photo deleted')
-
-                    //                     let l = p.photos.length
-                    //                     for (let i = 0; i < l; i++) {
-                    //                             if (p.photos[i].id === p.selectedPhoto.id) {
-
-                    //                                     p.photos.splice(i, 1)
-                    //                                     break
-                    //                             }
-                    //                     }
-                    //                     p.pane = 'gallery'
-                    //             })
-                    // })
                 },
 
 
