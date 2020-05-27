@@ -1,9 +1,8 @@
 # An Image Browser Component Built with VueJs
 
-![Image Gallery](images/example-image-1.png)
-![Image Upload](images/example-image-2.png)
+![](images/example-image-1.png)
 
-
+Shows an image gallery based on images returned via a JSON API. Also provides ability to search, upload, select and delete images.
 
 ## Usage
 Install as npm package
@@ -14,7 +13,7 @@ npm install @akashmitra/vue-image-browser
 
 To use this inside another Vue component, you must `import` this as a component.
 
-```
+```javascript
 <template>
     <VueImageBrowser
         source="api/images"
@@ -44,7 +43,7 @@ export default {
 
 The browser assumes that the `source` URL returns an array of `image` objects of following format.
 
-```
+```javascript
 {
     data: [
         {
@@ -67,9 +66,12 @@ The browser assumes that the `source` URL returns an array of `image` objects of
 
 ## Image Upload Response
 
-The browser assumes when an image is uploaded successfully, a 200 response is received with following response JSON
+![](images/example-image-2.png)
 
-```
+It is possible to upload an image to a specified API endpoint (`save-url`) via POST.
+When an image is uploaded successfully, a 200 HTTP Status code response must be sent back with following response JSON:
+
+```javascript
 {
     ...
     file: imageObject
@@ -93,7 +95,7 @@ Please note the key `file` in the response. The uploaded file must be returned a
 
 ### Example with custom POST request header
 
-```
+```javascript
 <template>
     <VueImageBrowser
             source="api/images"
