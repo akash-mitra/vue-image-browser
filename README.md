@@ -1,6 +1,7 @@
 # An Image Browser Component Built with VueJs
 
 ![Image Gallery](images/example-image-1.png)
+![Image Upload](images/example-image-2.png)
 
 
 
@@ -64,13 +65,26 @@ The browser assumes that the `source` URL returns an array of `image` objects of
 
 ```
 
+## Image Upload Response
+
+The browser assumes when an image is uploaded successfully, a 200 response is received with following response JSON
+
+```
+{
+    ...
+    file: imageObject
+    ...
+}
+```
+Please note the key `file` in the response. The uploaded file must be returned as the value of this key. The value (`imageObject` mentioned above) is similar to the `image` object described in the previous section.
+
 ## Options
 
 | Parameter           | Description                                                                                                                                                                                      |
 |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `source`            | Specify the URL that returns an array of the  `image`  objects                                                                                                                                   |
-| `save_url`          | (OPTIONAL) Specify the URL to send POST requests for uploading new images                                                                                                                                   |
-| `request_headers`   | (OPTIONAL) An object containing key-value pairs, where each key and the corresponding value is sent as custom request header in the post requests. See an example below.                                    |
+| `save-url`          | (OPTIONAL) Specify the URL to send POST requests for uploading new images                                                                                                                                   |
+| `request-headers`   | (OPTIONAL) An object containing key-value pairs, where each key and the corresponding value is sent as custom request header in the post requests. See an example below.                                    |
 | `selectable`        | (OPTIONAL, default `false`) If this is true, you can select an image from the browser and a  `selected`  event will be generated and the corresponding  `image`  object will be passed to the event handler.                 |
 | `deletable`         | (OPTIONAL, default `false`) If this is true, the browser will show a Delete button. Clicking the Delete button will generate a  `deleted`  event and the corresponding  `image`  object will be passed to the event handler. |
 | `lazyload`          | (OPTIONAL, default `true`) When this is true, only the images that are within the viewport will be actually downloaded. By default it is true.                                                                              |
@@ -83,8 +97,8 @@ The browser assumes that the `source` URL returns an array of `image` objects of
 <template>
     <VueImageBrowser
             source="api/images"
-            save_url="api/images"
-            request_headers="headers"
+            save-url="api/images"
+            :request-headers="headers"
             selectable
             deletable
             @selected="onSelect"

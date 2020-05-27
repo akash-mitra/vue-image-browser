@@ -159,14 +159,14 @@ export default {
                 default: '/api/photos'
             },
 
-            save_url: {
+            saveUrl: {
                 type: String,
                 default: '/api/photos'
             },
 
-            request_headers: {
+            requestHeaders: {
                 type: Object,
-                default: {}
+                default: () => ({})
             },
 
             deletable: {
@@ -276,12 +276,12 @@ export default {
                                 }
                                 // ajax.upload.addEventListener('abort', abortHandler, false);
 
-                                upf.ajax.open('POST', p.save_url)
+                                upf.ajax.open('POST', p.saveUrl)
 
-                                let header_keys = Object.keys(p.request_headers)
+                                let header_keys = Object.keys(p.requestHeaders)
                                 for (let i=0; i < header_keys.length; i++) {
                                         let header = header_keys[i]
-                                        let val = p.request_headers[header]
+                                        let val = p.requestHeaders[header]
                                         upf.ajax.setRequestHeader(header, val)
                                 }
 
@@ -291,7 +291,8 @@ export default {
                                         if(response) {
                                             try {
                                                 let media = JSON.parse(response);
-                                                p.photos.push(media.file)
+                                                p.photos.unshift(media.file)
+                                                p.searchResult = p.photos.length + ' image(s)'
                                             } catch(e) {
                                                 alert(e);
                                             }
@@ -339,9 +340,9 @@ export default {
 
                         xhr.onload = function() {
                                 let responseObj = xhr.response;
-                                p.photos = response.data
+                                p.photos = responseObj.data
                                 p.message = null
-                                p.searchResult = response.data.total + ' image(s)'
+                                p.searchResult = responseObj.data.length + ' image(s)'
                         }
 
                         xhr.onerror = function() {

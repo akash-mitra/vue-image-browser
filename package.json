@@ -1,6 +1,6 @@
 {
   "name": "@akashmitra/vue-image-browser",
-  "version": "1.0.3",
+  "version": "1.0.8",
   "description": "A VueJS Image Browser Component with options to upload, browse, delete and select images",
   "main": "/dist/vue-image-browser.umd.js",
   "module": "dist/vue-image-browser.esm.js",
