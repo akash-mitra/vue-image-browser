@@ -13,7 +13,7 @@
                                         <span v-if="searchResult" class="py-1 px-2 bg-transparent rounded-lg text-xs whitespace-no-wrap" v-text="searchResult"></span>
                                 </div>
                         </div>
-                        <div class="flex-none">
+                        <div class="flex-none" v-if="allowUpload">
                             <button class="text-blue-600 mx-2 px-4" title="Upload Image" @click="pane='upload'">
                                     Upload
                             </button>
@@ -21,15 +21,14 @@
                 </div>
 
                 <div v-show="pane==='gallery'" class="w-full flex flex-wrap thumbnail-container overflow-y-scroll">
-                        <div v-for="photo in photos" :key="photo.id" class="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5" @click="select(photo)">
+                        <div v-for="photo in images" :key="photo.id" :class="imagesPerRow" @click="select(photo)">
 
                                 <div class="bg-white shadow mr-4 mb-4 cursor-pointer">
                                         <div class="w-full flex items-center justify-center thumbnail">
                                                 <img v-bind:data-src="photo.url" :title="photo.name" class="mg-photo"/>
                                         </div>
                                         <div class="w-full flex bg-white justify-between text-gray-600 text-xs p-2">
-                                                <span v-text="photo.storage.toUpperCase()"></span>
-                                                <span>{{ photo.size }} KB</span>
+                                                <span class="truncate">{{ photo.name }}</span>
                                         </div>
                                 </div>
                         </div>
@@ -39,9 +38,13 @@
                 <div v-if="pane==='photo'" class="w-full mx-auto py-4 px-4 bg-transparent flex justify-between items-center">
                         <button class="flex items-center" @click="pane='gallery'">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="fill-current h-8 w-8 rounded-full border border-gray-600 p-2 text-gray-600 mr-2"><polygon points="3.828 9 9.899 2.929 8.485 1.515 0 10 .707 10.707 8.485 18.485 9.899 17.071 3.828 11 20 11 20 9 3.828 9"/></svg>
-                                <p class="text-blue-700 text-xl">All Photos</p>
+                                <p class="text-blue-700 text-xl">Back to Gallery</p>
                         </button>
-                        <span @click="deleteSelected()" v-if="deletable" class="text-red-500 mr-4 px-2 text-sm py-1 hover:border border-red-500 hover:text-white hover:bg-red-500 rounded cursor-pointer">Delete </span>
+
+                        <div class="flex items-center justify-between">
+                                <button @click="copy" v-if="allowCopy" class="py-2 px-6 text-blue-600 hover:text-blue-800 mt-4 ml-4">{{ copyLinkText }}</button>
+                                <button @click="choose" v-if="allowSelect" class="py-2 px-6 bg-green-500 text-white rounded shadow text-xl mt-4 ml-4">Select</button>
+                        </div>
                 </div>
 
                 <div v-if="pane==='photo'" class="w-full px-4 postcard-container">
@@ -52,46 +55,15 @@
 
                     <div class="w-full text-sm px-2 py-2 bg-white">
 
-                        <button v-if="selectable" class="py-2 px-6 bg-green-500 text-white rounded shadow text-xl mt-4 ml-4" @click="choose">Select</button>
-
                         <table class="w-full mt-4 table-auto">
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">Media ID</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.id}}</td>
+                            <tr class="border-b" v-for="(pk, pv) in imageProperties">
+                                <td class="p-4 uppercase font-semibold text-gray-600">{{ pk.toUpperCase() }}</td>
+                                <td class="p-4 font-mono">{{ selectedPhoto[pv] }}</td>
                             </tr>
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">Original Media Name</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.name}}</td>
-                            </tr>
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">Media Type</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.type}}</td>
-                            </tr>
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">File Size</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.size}} KB</td>
-                            </tr>
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">File Path</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.path}}</td>
-                            </tr>
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">Media URL</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.url}}</td>
-                            </tr>
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">Storage Type</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.storage}}</td>
-                            </tr>
-                            <tr class="border-b">
-                                <td class="p-4 uppercase font-semibold text-gray-600">Created</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.created_ago}}</td>
-                            </tr>
-                            <tr class="">
-                                <td class="p-4 uppercase font-semibold text-gray-600">Uploader ID</td>
-                                <td class="p-4 font-mono">{{selectedPhoto.user_id}}</td>
-                            </tr>
+
                         </table>
+
+                        <button @click="deleteSelected()" v-if="allowDelete" class="text-red-500 border m-4 mt-6 px-4 text-sm py-1 hover:border border-red-500 hover:text-white hover:bg-red-500 rounded cursor-pointer">Delete </button>
 
                     </div>
 
@@ -154,9 +126,18 @@ export default {
         name: 'vue-image-browser',
 
         props: {
-            source: {
-                type: String,
-                default: '/api/photos'
+            images: {
+                type: Array,
+                default: () => []
+            },
+
+            imageProperties: {
+                type: Object
+            },
+
+            allowUpload: {
+                type: Boolean,
+                default: false
             },
 
             saveUrl: {
@@ -164,41 +145,86 @@ export default {
                 default: '/api/photos'
             },
 
-            requestHeaders: {
+            saveRequestHeaders: {
                 type: Object,
-                default: () => ({})
+                default: () => {}
             },
 
-            deletable: {
+            searchDelay: {
+                type: Number,
+                default: 500
+            },
+
+            allowDelete: {
                     type: Boolean,
                     default: false
             },
-            selectable: {
+
+            allowSelect: {
                     type: Boolean,
                     default: false
             },
-            lazyload: {
+
+            allowCopy: {
                     type: Boolean,
                     default: true
+            },
+
+            captionable: {
+                    type: Boolean,
+                    default: false
+            },
+
+            enableLazyLoad: {
+                    type: Boolean,
+                    default: true
+            },
+
+            maxImagesPerRow: {
+                    type: Number,
+                    default: 5
             }
         },
+
         data: function () {
                 return {
-                        photos: [],
-                        message: 'Loading Images...',
+                        message: null,
                         query: '',
                         searchResult: null,
                         pane: 'gallery',
                         selectedPhoto: {},
                         uploadableFiles: [],
+                        copyLinkText: 'Copy Link'
                 }
         },
-        created: function () {
-                this.getFromServer()
+
+        created() {
+                this.$nextTick(function () {
+                        if (this.enableLazyLoad) {
+                                this.enableLazyLoading()
+                        }
+                })
         },
 
         updated: function () {
-                this.enableLazyLoad()
+                this.$nextTick(function () {
+                        if (this.enableLazyLoad) {
+                                this.enableLazyLoading()
+                        }
+                })
+        },
+
+        computed: {
+
+                imagesPerRow(){
+
+                        let xs = parseInt(this.maxImagesPerRow * (1/4))
+                          , md = parseInt(this.maxImagesPerRow * (2/4))
+                          , lg = parseInt(this.maxImagesPerRow * (3/4))
+                          , xl = parseInt(this.maxImagesPerRow * (4/4))
+
+                        return 'w-full w-1/' + xs + ' md:w-1/' + md + ' lg:w-1/' + lg +  ' xl:w-1/' + xl
+                }
         },
 
         methods: {
@@ -211,44 +237,61 @@ export default {
                         this.timer = null;
                     }
 
-                    p.searchResult = 'Searching...'
+                    if (p.query.length > 0) p.searchResult = 'Searching...'
+                    else p.searchResult = ''
 
                     this.timer = setTimeout(() => {
 
-                        p.getFromServer(p.query)
-                    }, 800)
+                        // p.getFromServer(p.query)
+                        p.$emit('searched', p.query)
+                    }, this.searchDelay)
 
                 },
 
                 select(photo) {
                         this.pane = 'photo'
+                        this.copyLinkText = 'Copy Link'
                         this.selectedPhoto = photo
                 },
 
                 choose: function () {
 
-                        // remove file name extensions
-                        let caption = this.selectedPhoto.name.replace(/\.[^/.]+$/, "")
+                        if (this.captionable) {
+                                // remove file name extensions
+                                let caption = this.selectedPhoto.name.replace(/\.[^/.]+$/, "")
 
-                        // remove special characters with space
-                        caption = caption.replace(/[^\w\s]/gi, ' ')
+                                // remove special characters with space
+                                caption = caption.replace(/[^\w\s]/gi, ' ')
 
-                        // uppercase first letter of each word
-                        caption = caption.toLowerCase()
-                                .split(' ')
-                                .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
-                                .join(' ');
+                                // uppercase first letter of each word
+                                caption = caption.toLowerCase()
+                                        .split(' ')
+                                        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+                                        .join(' ');
 
-                        var captionChosen = prompt('Enter an caption for this image', caption)
-                        //TODO we should remove any double quote in captionChosen
-                        this.selectedPhoto['caption'] = captionChosen
+                                var captionChosen = prompt('Enter an caption for this image', caption)
+                                //TODO we should remove any double quote in captionChosen
+                                this.selectedPhoto['caption'] = captionChosen
+                        }
 
                         this.$emit('selected', this.selectedPhoto)
+                        this.pane = 'gallery'
+                },
+
+
+                copy() {
+                        let p = this
+                        if (navigator.clipboard) {
+                                navigator.clipboard.writeText(this.selectedPhoto.url).then(()=>{
+                                        p.copyLinkText = 'Link Copied!'
+                                })
+                        }
                 },
 
                 uploadFiles: function () {
-                        let files = document.getElementById('files').files,
-                            p = this;
+
+                        let files = document.getElementById('files').files, p = this;
+
                         for(let i = 0; i < files.length; i++) {
                                 let upf = {
                                         name: files[i].name,
@@ -260,7 +303,6 @@ export default {
 
                                 upf.formdata.append('image', files[i])
                                 upf.formdata.append('name', files[i].name)
-                                // upf.formdata.append("Content-Type", files[i].type);
 
                                 upf.ajax.upload.onprogress = function (e) {
                                         upf.status = 'Uploaded ' + Math.round(e.loaded/1000) + ' KB...'
@@ -278,10 +320,10 @@ export default {
 
                                 upf.ajax.open('POST', p.saveUrl)
 
-                                let header_keys = Object.keys(p.requestHeaders)
+                                let header_keys = Object.keys(p.saveRequestHeaders)
                                 for (let i=0; i < header_keys.length; i++) {
                                         let header = header_keys[i]
-                                        let val = p.requestHeaders[header]
+                                        let val = p.saveRequestHeaders[header]
                                         upf.ajax.setRequestHeader(header, val)
                                 }
 
@@ -291,8 +333,8 @@ export default {
                                         if(response) {
                                             try {
                                                 let media = JSON.parse(response);
-                                                p.photos.unshift(media.file)
-                                                p.searchResult = p.photos.length + ' image(s)'
+                                                p.$emit('saved', media)
+
                                             } catch(e) {
                                                 alert(e);
                                             }
@@ -308,90 +350,44 @@ export default {
                         }
                 },
 
-                // Gets media data from the server. If a query string is
-                // provided then only returns the data that fulfill
-                // the search conditions in query string.
-                getFromServer1: function (query, callback) {
-                        const p = this
-                        let url = this.source + ((typeof query != 'undefined' && query != null) ? '?query=' + encodeURIComponent(query):'')
-                        axios.get(url)
-                        .then(function (response) {
-                                p.photos = response.data.data
-                                p.message = null
-                                p.searchResult = response.data.total + ' image(s)'
-                                if (typeof callback != 'undefined') callback.call()
-                        })
-                        .catch(function (error) {
-                                p.message = 'Request failed with ' + error.response.status + ': ' + error.response.statusText
-                                if (error.response.status == '403') { // special helpful message for loggedout situations
-                                        p.message += '. Make sure you are logged in or refresh the page.'
-                                }
-                        })
-                },
-
-                getFromServer(query) {
-                        const p = this
-                        let url = this.source + ((typeof query != 'undefined' && query != null) ? '?query=' + encodeURIComponent(query):'')
-
-                        let xhr = new XMLHttpRequest()
-                        xhr.open('GET', url)
-                        xhr.responseType = 'json'
-                        xhr.send()
-
-                        xhr.onload = function() {
-                                let responseObj = xhr.response;
-                                p.photos = responseObj.data
-                                p.message = null
-                                p.searchResult = responseObj.data.length + ' image(s)'
-                        }
-
-                        xhr.onerror = function() {
-                                p.message = 'Failed to load images from the server. Please reload the page.'
-                        };
-                },
-
 
                 deleteSelected() {
-
-                    this.$emit('deleted', this.selectedPhoto)
+                        this.$emit('deleted', this.selectedPhoto)
+                        this.pane = 'gallery'
                 },
 
 
                 // This is an experimental function that enables
                 // lazy-loading.
-                enableLazyLoad: function () {
+                enableLazyLoading() {
+
                         let images = document.querySelectorAll('.mg-photo');
 
                         const config = {
-                                root: document.querySelector('.top-panel'),
-                                // If the image gets within 100px in the Y axis, start the download.
+                                root: null,
                                 rootMargin: '0px 0px 50px 0px'
                         };
 
                         // check if intersection observer is supported via browser
-                        if (!('IntersectionObserver' in window) || this.lazyload === false) {
+                        if (!('IntersectionObserver' in window)) {
                                 // if not, just load all immediately
                                 Array.from(images).forEach(function(image) {
                                         console.log('IntersectionObserver unsupported loading')
                                         if(! image.src) image.src = image.dataset.src
                                 })
                         } else {
-                                // The observer is supported
                                 let observer = new IntersectionObserver(function (entries) {
-                                        // Loop through the entries
                                         entries.forEach(image => {
                                                 // Are we in viewport?
                                                 if (image.isIntersecting) {
-                                                        // Stop watching and load the image
                                                         // console.log('Loading: ' + image.target.dataset.src)
-                                                        observer.unobserve(image.target)
                                                         // console.log(image.target.src)
                                                         image.target.src = image.target.dataset.src
+                                                        observer.unobserve(image.target)
                                                 }
                                         })
                                 }, config)
 
-                                // start observing...
                                 images.forEach(image => {
                                         if(! image.src) {
                                             observer.observe(image)
@@ -404,27 +400,39 @@ export default {
 </script>
 
 <style>
-        .thumbnail-container {
 
-        }
+@media only screen and (min-width: 640px) {
+
         .thumbnail {
-            height: 100px;
+            height: 300px;
             overflow: hidden;
         }
+}
+@media only screen and (min-width: 768px) {
 
-        .postcard-container {
-
-
+        .thumbnail {
+            height: 250px;
+            overflow: hidden;
         }
+}
+@media only screen and (min-width: 1024px) {
 
-        .postcard  {
-
+        .thumbnail {
+            height: 200px;
+            overflow: hidden;
         }
+}
+@media only screen and (min-width: 1280px) {
+
+        .thumbnail {
+            height: 120px;
+            overflow: hidden;
+        }
+}
 
         .mg-photo {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
 </style>

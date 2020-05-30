@@ -2,24 +2,37 @@
 
 ![](images/example-image-1.png)
 
-Shows an image gallery based on images returned via a JSON API. Also provides ability to search, upload, select and delete images.
+A JavaScript Image Browser written in [VueJS](https://vuejs.org/) and styled with [TailwindCSS](https://tailwindcss.com/docs/installation/).
+
+## Features
+- Image Upload
+- Local or Remote Image Search
+- Show larger image
+- Delete Image hook
+- Show arbitrary image information
+- Generate Or Capture Image Caption
+- Lazy Load Images on scroll
 
 ## Usage
+
 Install as npm package
 
 ```
 npm install @akashmitra/vue-image-browser
 ```
 
-To use this inside another Vue component, you must `import` this as a component.
+`import` this as a component. You may also use this inside another Vue component.
 
 ```javascript
 <template>
+
     <VueImageBrowser
-        source="api/images"
-        selectable
-        deletable
-        @selected="onSelect"></VueImageBrowser>
+        :images="photos"
+        :image-properties="photoFields"
+        allow-upload
+        allow-delete
+        enable-lazy-load>
+    </VueImageBrowser>
 
 </template>
 <script>
@@ -29,9 +42,16 @@ export default {
     components: {
         VueImageBrowser,
     },
-    methods: {
-        onSelect() {
-
+    data() {
+        return {
+            photos: [
+                {'id': 1, 'name': 'sunflower.jpg', 'url': '/images/sunflower.jpg'},
+                {'id': 2, 'name': 'rose.jpg', 'url': '/images/rose.jpg'},
+                {'id': 3, 'name': 'tulip.jpg', 'url': '/images/tulip.jpg'},
+            ],
+            photoFields: {
+                'id': 'Image ID', 'name': 'File Name', 'url': 'Image Location'
+            }
         }
     }
 }
@@ -41,102 +61,138 @@ export default {
 
 ## Image Object
 
-The browser assumes that the `source` URL returns an array of `image` objects of following format.
-
-```javascript
-{
-    data: [
-        {
-            id: 1,
-            name: 'image-name.jpg',
-            type: 'jpeg',
-            size: 10,
-            url: 'www.example.com/image-name.jpg',
-            storage: 'public',
-            user_id: 1,
-            created_ago: '2 days ago'
-        },
-        {...},
-        {...}
-    ]
-}
+The `images` attribute in `VueImageBrowser` accepts an array containing one or more "image objects" with following mandatory fields - `id`, `name` and `url`. The image object can contain other fields as well. You can specify the additional fields in `image-properties` as key-value pairs, where the `key` is the attribute name and the `value` is the attribute title.
 
 
-```
 
 ## Image Upload Response
 
 ![](images/example-image-2.png)
 
 It is possible to upload an image to a specified API endpoint (`save-url`) via POST.
-When an image is uploaded successfully, a 200 HTTP Status code response must be sent back with following response JSON:
+When an image is uploaded successfully, a 200 HTTP Status code response must be sent back from the server with a response JSON. After the image is uploaded successfully, a `saved` event will be generated and the response JSON will be passed with the event. Please see the example section below.
 
-```javascript
-{
-    ...
-    file: imageObject
-    ...
-}
-```
-Please note the key `file` in the response. The uploaded file must be returned as the value of this key. The value (`imageObject` mentioned above) is similar to the `image` object described in the previous section.
 
 ## Options
 
-| Parameter           | Description                                                                                                                                                                                      |
-|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `source`            | Specify the URL that returns an array of the  `image`  objects                                                                                                                                   |
-| `save-url`          | (OPTIONAL) Specify the URL to send POST requests for uploading new images                                                                                                                                   |
-| `request-headers`   | (OPTIONAL) An object containing key-value pairs, where each key and the corresponding value is sent as custom request header in the post requests. See an example below.                                    |
-| `selectable`        | (OPTIONAL, default `false`) If this is true, you can select an image from the browser and a  `selected`  event will be generated and the corresponding  `image`  object will be passed to the event handler.                 |
-| `deletable`         | (OPTIONAL, default `false`) If this is true, the browser will show a Delete button. Clicking the Delete button will generate a  `deleted`  event and the corresponding  `image`  object will be passed to the event handler. |
-| `lazyload`          | (OPTIONAL, default `true`) When this is true, only the images that are within the viewport will be actually downloaded. By default it is true.                                                                              |
-|                     |                                                                                                                                                                                                  |
+| Parameter              | Type    | Default Value | Description                                                                                                                                                                                      |
+|------------------------|---------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `images`               | Array   | `[]`          | An array containing the image objects. Each image object must contain `id`, `name` and `url` of the image                                                                                        |
+| `image-properties`     | Object  |               | An object containing all the fields in image object along with the field titles                                                                                                                  |
+| `allow-upload`         | Boolean | false         | (OPTIONAL) Whether or not to provide provision for image upload. If this is `true`, a `save-url` must be provided.                                                                               |
+| `save-url`             | String  | /api/photos   | Specify the URL endpoint for posting the uploaded images.                                                                                                                                        |
+| `save-request-headers` | Object  | `{}`          | (OPTIONAL) If you need to pass any additional HTTP headers, you may do so by providing the header names and values in this object                                                                |
+| `search-delay`         | Number  | 500           | (OPTIONAL) A delay in miliseconds after which the search event is fired.                                                                                                                         |
+| `allow-delete`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for deleting an image. If this is true, delete button will be shown and a `deleted` event will be generated                                     |
+| `allow-select`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for selecting an image. If this is true, a select button will be shown and a `selected` event will be generated                                 |
+| `allow-copy`           | Boolean | true          | (OPTIONAL) Whether or not to provide a provision for copying the image URL. If this is true, a `Copy Link` button will be shown and the image `url` will be copied to the clipboard              |
+| `captionable`          | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for specifying the image caption after selecting an image. If this is true, a prompt will be shown for image caption when users select an image |
+| `enable-lazy-load`     | Boolean | true          | (OPTIONAL) Uses IntersectionObserver to ensure the images are only loaded to browser when the image comes near the browser viewport                                                              |
+| `max-images-per-row`   | Number  | 5             | (OPTIONAL) Maximum number of images to be displayed in each row in image gallery. Must be a value from 1 to 6. Actual number of displayed images will vary based on screen-size                  |
 
 
-### Example with custom POST request header
+## Events
+
+Following events are generated when performing various interactions with the images.
+
+| Event         | Parameter Type  | Parameter Value   |  Description                                                                                                                                                              |
+|---------------|-----------------|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `searched`    | String          | seach phrase      | This event is generated when users search in the search box. The search phrase is passed to the event handler, which can be used to filter the images array               |
+| `selected`    | Object          | image             | This event is generated when users select an image. The image is passed to the event handler.                                                                             |
+| `saved`       | Object          | image             | This event is generated when users successfully upload an image. The image is passed to the event handler.                                                                |
+| `deleted`     | Object          | image             | This event is generated when users delete an image. The image is passed to the event handler.                                                                             |
+
+
+## Example
 
 ```javascript
 <template>
-    <VueImageBrowser
-            source="api/images"
-            save-url="api/images"
-            :request-headers="headers"
-            selectable
-            deletable
+
+
+        <VueImageBrowser
+            :images="photos"
+            :image-properties="imageFields"
+            allow-select
+            allow-upload
+            :allow-delete="false"
+            enable-lazy-load
+            save-url="/api/media"
+            :save-request-headers="headers"
             @selected="onSelect"
+            @saved="onSave"
             @deleted="onDelete"
+            @searched="onSearch"
             >
-    </VueImageBrowser>
+        </VueImageBrowser>
+
+
 </template>
 
 <script>
-    import VueImageBrowser from '@akashmitra/vue-image-browser'
 
-    export default {
+import VueImageBrowser from '@akashmitra/vue-image-browser'
 
-        components: {
-            VueImageBrowser,
-        },
+export default {
+    components: {
+        VueImageBrowser,
+    },
+    data() {
+        return {
+            photos: [],
+            headers: {
+                "X-CSRF-Token": document.head.querySelector('meta[name="csrf-token"]').content
+            },
+            imageFields: {
+                'id': 'File ID',
+                'name': 'Image Name',
+                'url': 'url',
+                'size': 'File Size (KB)',
+                'type': 'Image Type',
+            }
+        }
+    },
 
-        data() {
-            return {
-                headers: {
-                    // this header will be automatically appended with POST request
-                    "X-CSRF-Token": document.head.querySelector('meta[name="csrf-token"]').content
+    created() {
+        this.getFromServer()
+    },
+
+    methods: {
+        onDelete(image) {
+            // make an ajax call to server to delete the image
+            // TODO
+            // on ajax success, remove the image from your list
+            for(let i = 0; i < p.photos.length; i++) {
+                let photo = p.photos[i]
+                if (photo.id === image.id){
+                        p.photos.splice(i, 1)
+                        break
                 }
             }
         },
 
-        methods: {
-            onSelect(image) {
-                // do something with the image
-            },
+        onSelect(image) {
+            console.log('on select', image)
+        },
 
-            onDelete(image) {
-                // send server request to delete the image
-            }
-        }
+        onSearch(query) {
+            this.getFromServer(query)
+        },
+
+        onSave(image) {
+            this.photos.unshift(image)
+        },
+
+        getFromServer(search_phrase) {
+            // search the images on server based on the search phrase
+        },
+
     }
+}
 </script>
 
+
 ```
+
+## Dependency
+
+[TailwindCSS](https://tailwindcss.com/docs/installation/) must be present for the styling.
