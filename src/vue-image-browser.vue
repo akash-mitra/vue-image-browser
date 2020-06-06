@@ -23,7 +23,7 @@
                 <div v-show="pane==='gallery'" class="w-full flex flex-wrap thumbnail-container overflow-y-scroll">
                         <div v-for="photo in images" :key="photo.id" :class="imagesPerRow" @click="select(photo)">
 
-                                <div class="bg-white shadow mr-4 mb-4 cursor-pointer">
+                                <div class="bg-white shadow mr-4 mb-4 cursor-pointer" :class="selectedPhoto.id === photo.id ? 'border border-blue-600': ''">
                                         <div class="w-full flex items-center justify-center thumbnail">
                                                 <img v-bind:data-src="photo.url" :title="photo.name" class="mg-photo"/>
                                         </div>
@@ -43,7 +43,7 @@
 
                         <div class="flex items-center justify-between">
                                 <button @click="copy" v-if="allowCopy" class="py-2 px-6 text-blue-600 hover:text-blue-800 mt-4 ml-4">{{ copyLinkText }}</button>
-                                <button @click="choose" v-if="allowSelect" class="py-2 px-6 bg-green-500 text-white rounded shadow text-xl mt-4 ml-4">Select</button>
+                                <button @click="choose" v-if="allowChoose" class="py-2 px-6 bg-green-500 text-white rounded shadow text-xl mt-4 ml-4">{{ chooseBtnText }}</button>
                         </div>
                 </div>
 
@@ -160,7 +160,12 @@ export default {
                     default: false
             },
 
-            allowSelect: {
+            allowPhotoPane: {
+                    type: Boolean,
+                    default: false
+            },
+
+            allowChoose: {
                     type: Boolean,
                     default: false
             },
@@ -194,7 +199,8 @@ export default {
                         pane: 'gallery',
                         selectedPhoto: {},
                         uploadableFiles: [],
-                        copyLinkText: 'Copy Link'
+                        copyLinkText: 'Copy Link',
+                        chooseBtnText: 'Choose'
                 }
         },
 
@@ -228,65 +234,59 @@ export default {
         },
 
         methods: {
-                doDelayedSearch() {
-
-                    let p = this
-
-                    if (this.timer) {
-                        clearTimeout(this.timer);
-                        this.timer = null;
-                    }
-
-                    if (p.query.length > 0) p.searchResult = 'Searching...'
-                    else p.searchResult = ''
-
-                    this.timer = setTimeout(() => {
-
-                        // p.getFromServer(p.query)
-                        p.$emit('searched', p.query)
-                    }, this.searchDelay)
-
-                },
 
                 select(photo) {
-                        this.pane = 'photo'
-                        this.copyLinkText = 'Copy Link'
+
                         this.selectedPhoto = photo
+
+                        this.allowPhotoPane && (this.pane = 'photo')
+
+                        this.captionable && (this.selectedPhoto['caption'] = this.getCaption())
+
+                        this.$emit('selected', this.selectedPhoto)
                 },
+
 
                 choose: function () {
 
-                        if (this.captionable) {
-                                // remove file name extensions
-                                let caption = this.selectedPhoto.name.replace(/\.[^/.]+$/, "")
+                        this.captionable && (this.selectedPhoto['caption'] = this.getCaption())
 
-                                // remove special characters with space
-                                caption = caption.replace(/[^\w\s]/gi, ' ')
+                        this.$emit('chosen', this.selectedPhoto)
 
-                                // uppercase first letter of each word
-                                caption = caption.toLowerCase()
-                                        .split(' ')
-                                        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
-                                        .join(' ');
-
-                                var captionChosen = prompt('Enter an caption for this image', caption)
-                                //TODO we should remove any double quote in captionChosen
-                                this.selectedPhoto['caption'] = captionChosen
-                        }
-
-                        this.$emit('selected', this.selectedPhoto)
                         this.pane = 'gallery'
                 },
 
 
                 copy() {
+
                         let p = this
+
                         if (navigator.clipboard) {
+
                                 navigator.clipboard.writeText(this.selectedPhoto.url).then(()=>{
+
                                         p.copyLinkText = 'Link Copied!'
                                 })
                         }
                 },
+
+
+                getCaption () {
+                        // remove file name extensions
+                        let caption = this.selectedPhoto.name.replace(/\.[^/.]+$/, "")
+
+                        // remove special characters with space
+                        caption = caption.replace(/[^\w\s]/gi, ' ')
+
+                        // uppercase first letter of each word
+                        caption = caption.toLowerCase()
+                                .split(' ')
+                                .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+                                .join(' ');
+
+                        return prompt('Enter an caption for this image', caption)
+                },
+
 
                 uploadFiles: function () {
 
@@ -354,6 +354,26 @@ export default {
                 deleteSelected() {
                         this.$emit('deleted', this.selectedPhoto)
                         this.pane = 'gallery'
+                },
+
+
+                doDelayedSearch() {
+
+                    let p = this
+
+                    if (this.timer) {
+                        clearTimeout(this.timer);
+                        this.timer = null;
+                    }
+
+                    if (p.query.length > 0) p.searchResult = 'Searching...'
+                    else p.searchResult = ''
+
+                    this.timer = setTimeout(() => {
+
+                        p.$emit('searched', p.query)
+                    }, this.searchDelay)
+
                 },
 
 

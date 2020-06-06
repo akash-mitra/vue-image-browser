@@ -7,9 +7,9 @@ A JavaScript Image Browser written in [VueJS](https://vuejs.org/) and styled wit
 ## Features
 - Image Upload
 - Local or Remote Image Search
-- Show larger image
-- Delete Image hook
-- Show arbitrary image information
+- Show larger image (Photo Pane view)
+- Delete Image
+- Show arbitrary information about the image
 - Generate Or Capture Image Caption
 - Lazy Load Images on scroll
 
@@ -82,12 +82,13 @@ When an image is uploaded successfully, a 200 HTTP Status code response must be 
 | `allow-upload`         | Boolean | false         | (OPTIONAL) Whether or not to provide provision for image upload. If this is `true`, a `save-url` must be provided.                                                                               |
 | `save-url`             | String  | /api/photos   | Specify the URL endpoint for posting the uploaded images.                                                                                                                                        |
 | `save-request-headers` | Object  | `{}`          | (OPTIONAL) If you need to pass any additional HTTP headers, you may do so by providing the header names and values in this object                                                                |
-| `search-delay`         | Number  | 500           | (OPTIONAL) A delay in miliseconds after which the search event is fired.                                                                                                                         |
-| `allow-delete`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for deleting an image. If this is true, delete button will be shown and a `deleted` event will be generated                                     |
-| `allow-select`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for selecting an image. If this is true, a select button will be shown and a `selected` event will be generated                                 |
-| `allow-copy`           | Boolean | true          | (OPTIONAL) Whether or not to provide a provision for copying the image URL. If this is true, a `Copy Link` button will be shown and the image `url` will be copied to the clipboard              |
+| `allow-photo-pane`     | Boolean | false         | (OPTIONAL) When this attribute is true, clicking on an image in the gallery will show a larger version of the image in a Photo pane, along with any additional image information.                |
+| `allow-delete`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for deleting an image in Photo Pane view. If this is true, delete button will be shown and a `deleted` event will be generated                  |
+| `allow-choose`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for chosing the image inside Photo Pane view. If this is true, a "Choose" button will be displayed and a `chosen` event will be generated       |
+| `allow-copy`           | Boolean | true          | (OPTIONAL) Whether or not to provide a provision for copying the image URL in the Photo Pane View. If this is true, a `Copy Link` button will be shown and image `url` will be copied to clipboard |
 | `captionable`          | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for specifying the image caption after selecting an image. If this is true, a prompt will be shown for image caption when users select an image |
 | `enable-lazy-load`     | Boolean | true          | (OPTIONAL) Uses IntersectionObserver to ensure the images are only loaded to browser when the image comes near the browser viewport                                                              |
+| `search-delay`         | Number  | 500           | (OPTIONAL) A delay in miliseconds after which the search event is fired.                                                                                                                         |
 | `max-images-per-row`   | Number  | 5             | (OPTIONAL) Maximum number of images to be displayed in each row in image gallery. Must be a value from 1 to 6. Actual number of displayed images will vary based on screen-size                  |
 
 
@@ -98,7 +99,8 @@ Following events are generated when performing various interactions with the ima
 | Event         | Parameter Type  | Parameter Value   |  Description                                                                                                                                                              |
 |---------------|-----------------|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `searched`    | String          | seach phrase      | This event is generated when users search in the search box. The search phrase is passed to the event handler, which can be used to filter the images array               |
-| `selected`    | Object          | image             | This event is generated when users select an image. The image is passed to the event handler.                                                                             |
+| `selected`    | Object          | image             | This event is generated when users click on an image in the Gallery. The image is passed to the event handler.                                                            |
+| `chosen`      | Object          | image             | This event is generated when users select an image. The image is passed to the event handler.                                                                             |
 | `saved`       | Object          | image             | This event is generated when users successfully upload an image. The image is passed to the event handler.                                                                |
 | `deleted`     | Object          | image             | This event is generated when users delete an image. The image is passed to the event handler.                                                                             |
 
@@ -112,13 +114,15 @@ Following events are generated when performing various interactions with the ima
         <VueImageBrowser
             :images="photos"
             :image-properties="imageFields"
-            allow-select
+            allow-photo-pane
+            allow-choose
             allow-upload
-            :allow-delete="false"
+            allow-delete
             enable-lazy-load
             save-url="/api/media"
             :save-request-headers="headers"
             @selected="onSelect"
+            @chosen="onChoose"
             @saved="onSave"
             @deleted="onDelete"
             @searched="onSearch"
