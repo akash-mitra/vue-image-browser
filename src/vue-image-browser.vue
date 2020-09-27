@@ -118,13 +118,34 @@
           </tr>
         </table>
 
-        <button
-          @click="deleteSelected()"
-          v-if="allowDelete"
-          class="text-red-500 border m-4 mt-6 px-4 text-sm py-1 hover:border border-red-500 hover:text-white hover:bg-red-500 rounded cursor-pointer"
-        >
-          Delete
-        </button>
+        <div class="w-full mx-auto py-4 bg-transparent my-4 flex items-center flex-no-wrap">
+          <div class="flex-none px-3">
+            <button
+              @click="deleteSelected()"
+              v-if="allowDelete"
+              class="text-red-500 border px-4 text-sm py-2 hover:border border-red-500 hover:text-white hover:bg-red-500 rounded cursor-pointer"
+            >
+              Delete
+            </button>
+          </div>
+          <div class="flex-grow flex px-3" v-if="allowRename">
+            <input
+              class="p-2 w-full rounded-l-lg rounded-r-lg sm:rounded-r-none border sm:border-r-0 border-gray-300 bg-white outline-none"
+              type="text"
+              v-model="renameQuery"
+            />
+            <div class="flex relative">
+              <button 
+                @click="renameSelected()"
+                :disabled="isRenameDisabled"
+                :class="isRenameDisabled ? 'opacity-50 cursor-not-allowed' : ''"
+                class="text-blue-500 px-4 text-sm py-1 hover:border hover:border-blue-500 hover:text-white hover:bg-blue-500 rounded-r-lg border-r border-t border-b border-gray-300 cursor-pointer">
+                Rename
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -266,6 +287,11 @@ export default {
       default: false,
     },
 
+    allowRename: {
+      type: Boolean,
+      default: false,
+    },
+
     allowPhotoPane: {
       type: Boolean,
       default: false,
@@ -301,6 +327,7 @@ export default {
     return {
       message: null,
       query: '',
+      renameQuery: '',
       searchResult: null,
       pane: 'gallery',
       selectedPhoto: {},
@@ -337,11 +364,17 @@ export default {
         'w-full w-1/' + xs + ' md:w-1/' + md + ' lg:w-1/' + lg + ' xl:w-1/' + xl
       )
     },
+
+    isRenameDisabled() {
+      return this.selectedPhoto.name === this.renameQuery
+    },
   },
 
   methods: {
     select(photo) {
       this.selectedPhoto = photo
+
+      this.renameQuery = photo.name
 
       this.allowPhotoPane && (this.pane = 'photo')
 
@@ -450,6 +483,13 @@ export default {
     deleteSelected() {
       this.$emit('deleted', this.selectedPhoto)
       this.pane = 'gallery'
+    },
+
+    renameSelected() {
+      if (this.renameQuery.length <= 0)
+        return;
+
+      this.$emit('renamed', this.selectedPhoto, this.renameQuery)
     },
 
     doDelayedSearch() {

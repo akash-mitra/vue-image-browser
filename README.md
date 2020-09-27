@@ -84,6 +84,7 @@ When an image is uploaded successfully, a 200 HTTP Status code response must be 
 | `save-request-headers` | Object  | `{}`          | (OPTIONAL) If you need to pass any additional HTTP headers, you may do so by providing the header names and values in this object                                                                |
 | `allow-photo-pane`     | Boolean | false         | (OPTIONAL) When this attribute is true, clicking on an image in the gallery will show a larger version of the image in a Photo pane, along with any additional image information.                |
 | `allow-delete`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for deleting an image in Photo Pane view. If this is true, delete button will be shown and a `deleted` event will be generated                  |
+| `allow-rename`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for renaming an image in Photo Pane view. If this is true, rename input with button will be shown and a `renamed` event will be generated                  |
 | `allow-choose`         | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for chosing the image inside Photo Pane view. If this is true, a "Choose" button will be displayed and a `chosen` event will be generated       |
 | `allow-copy`           | Boolean | true          | (OPTIONAL) Whether or not to provide a provision for copying the image URL in the Photo Pane View. If this is true, a `Copy Link` button will be shown and image `url` will be copied to clipboard |
 | `captionable`          | Boolean | false         | (OPTIONAL) Whether or not to provide a provision for specifying the image caption after selecting an image. If this is true, a prompt will be shown for image caption when users select an image |
@@ -103,7 +104,7 @@ Following events are generated when performing various interactions with the ima
 | `chosen`      | Object          | image             | This event is generated when users select an image. The image is passed to the event handler.                                                                             |
 | `saved`       | Object          | image             | This event is generated when users successfully upload an image. The image is passed to the event handler.                                                                |
 | `deleted`     | Object          | image             | This event is generated when users delete an image. The image is passed to the event handler.                                                                             |
-
+| `renamed`     | Object, String  | image, new name   | This event is generated when users rename an image. The image and the new name are passed to the event handler.                                                                             |
 
 ## Example
 
@@ -125,6 +126,7 @@ Following events are generated when performing various interactions with the ima
             @chosen="onChoose"
             @saved="onSave"
             @deleted="onDelete"
+            @renamed="onRename"
             @searched="onSearch"
             >
         </VueImageBrowser>
@@ -172,6 +174,11 @@ export default {
                         break
                 }
             }
+        },
+
+        onRename(image, newName) {
+            console.log('on rename : image -> ', image)
+            console.log('on rename : new name -> ', newName)
         },
 
         onSelect(image) {
