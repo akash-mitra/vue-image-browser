@@ -296,7 +296,7 @@ export default {
       default: 5,
     },
 
-    key: {
+    postKey: {
       type: String,
       default: 'image',
     },
@@ -403,7 +403,7 @@ export default {
           completion: 0,
         }
 
-        upf.formdata.append(this.key, files[i])
+        upf.formdata.append(this.postKey, files[i])
         upf.formdata.append('name', files[i].name)
 
         upf.ajax.upload.onprogress = function (e) {
