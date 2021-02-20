@@ -90,6 +90,7 @@ When an image is uploaded successfully, a 200 HTTP Status code response must be 
 | `enable-lazy-load`     | Boolean | true          | (OPTIONAL) Uses IntersectionObserver to ensure the images are only loaded to browser when the image comes near the browser viewport                                                              |
 | `search-delay`         | Number  | 500           | (OPTIONAL) A delay in miliseconds after which the search event is fired.                                                                                                                         |
 | `max-images-per-row`   | Number  | 5             | (OPTIONAL) Maximum number of images to be displayed in each row in image gallery. Must be a value from 1 to 6. Actual number of displayed images will vary based on screen-size                  |
+| `key`                  | String  | image         | (OPTIONAL) The name of the post request parameter to be used while posting file to the server.                                                                                                   |
 
 
 ## Events
